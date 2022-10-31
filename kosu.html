@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <script>
+            function convertTemp(temp) {
+                return ((temp * 1.8) + 32.0).toFixed(0) + "F";
+            }
+            function convertSpeed(speed) {
+                return (speed * 0.6213712).toFixed(0) + "mph";
+            }
+            function formatDate(date) {
+                var d = new Date(date);
+                return d.toLocaleDateString() + " " + d.toLocaleTimeString();
+            }
+            function formatPressure(pressure) {
+                return ((pressure)*0.00029529983071445).toFixed(2);
+            }
+            function formatWeather(station, wx) {
+                var obj = JSON.parse(wx);
+                var output = obj.properties.rawMessage + "\n";
+                output += formatDate(obj.properties.timestamp) + "\n";
+                output += obj.properties.textDescription + "\n";
+                output += "Temp: " + convertTemp(obj.properties.temperature.value) + "\n";
+                output += "Dewpoint: " + convertTemp(obj.properties.dewpoint.value) + "\n";
+                output += "Direction: " + obj.properties.windDirection.value + "&#176;\n";
+                output += "Speed: " + convertSpeed(obj.properties.windSpeed.value) + "\n";
+                output += "Gust: " + convertSpeed(obj.properties.windGust.value) + "\n";
+                output += "SLP: " + formatPressure(obj.properties.seaLevelPressure.value) + "\n";
+                document.getElementById(station + "wx").innerHTML = output;
+            }
+            function getData(station) {
+                var http = new XMLHttpRequest();
+                http.onreadystatechange = function() {
+                    if (this.readyState == 4 && this.status == 200) {
+                        formatWeather(station, http.responseText);
+                    }
+                };
+                http.open("GET", "https://api.weather.gov/stations/" + station + "/observations/latest", true);
+                http.setRequestHeader("User-Agent", "Norjekudo Software LLC");
+                http.send();                
+            }
+
+            window.onload = getData("KOSU");
+            window.onload = getData("KCMH");
+            setInterval(getData("KOSU"), 600000);
+            setInterval(getData("KCMH"), 600000);
+        </script>
+    </head>
+    <body>
+        <pre id="KOSUwx"></pre>
+        <pre id="KCMHwx"></pre>
+        <img src="https://www.wpc.ncep.noaa.gov//noaa/noaa.gif"/><br/>
+        <img src="https://radar.weather.gov/ridge/standard/KILN_loop.gif"/>
+        <img src="https://radar.weather.gov/ridge/standard/CENTGRLAKES_loop.gif"/><br/>
+        <img src="https://cdn.star.nesdis.noaa.gov/GOES16/ABI/SECTOR/cgl/GEOCOLOR/GOES16-CGL-GEOCOLOR-600x600.gif"/>
+    </body>
+</html>
